@@ -11,6 +11,7 @@ export default function ResultsPage() {
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(5);
   const [rating, setRating] = useState(1200);
+
   const [mastery, setMastery] = useState({
     arrays: 50,
     trees: 50,
@@ -32,33 +33,57 @@ export default function ResultsPage() {
   async function finishQuiz() {
     const player = name.trim() || "Anonymous";
 
-    await saveQuizResult({
-      name: player,
-      score,
-      total,
-      rating,
-      mastery,
-    });
+    try {
+      // Save to Supabase
+      await saveQuizResult({
+        name: player,
+        score,
+        total,
+        rating,
+        mastery,
+      });
 
-    localStorage.setItem("playerName", player);
-    localStorage.setItem("score", String(score));
-    localStorage.setItem("total", String(total));
-    localStorage.setItem("rating", String(rating));
-    localStorage.setItem("mastery", JSON.stringify(mastery));
+      // Save user info
+      localStorage.setItem("playerName", player);
+      localStorage.setItem("score", String(score));
+      localStorage.setItem("total", String(total));
+      localStorage.setItem("rating", String(rating));
+      localStorage.setItem("mastery", JSON.stringify(mastery));
 
-    router.push("/dashboard");
+      // ⭐ Save into leaderboard
+      const leaderboard = JSON.parse(
+        localStorage.getItem("leaderboard") || "[]"
+      );
+
+      leaderboard.push({
+        name: player,
+        score,
+        rating,
+      });
+
+      leaderboard.sort((a: any, b: any) => b.rating - a.rating);
+
+      localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+
+      // Go to dashboard
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Failed to save result:", error);
+      alert("Failed to save result. Please try again.");
+    }
   }
 
   const accuracy = Math.round((score / total) * 100);
 
   return (
-    <main className="min-h-screen bg-[#071342] flex justify-center items-center text-white">
+    <main className="min-h-screen bg-[#071342] flex items-center justify-center text-white">
       <div className="bg-[#10204D] p-8 rounded-3xl w-[430px]">
-        <h1 className="text-3xl font-bold mb-6 text-center">
+        <h1 className="text-3xl font-bold text-center mb-6">
           Quiz Complete 🎉
         </h1>
 
         <input
+          type="text"
           placeholder="Enter your name"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -84,7 +109,7 @@ export default function ResultsPage() {
 
         <button
           onClick={finishQuiz}
-          className="mt-8 w-full bg-cyan-400 text-black py-3 rounded-xl font-bold"
+          className="mt-8 w-full bg-cyan-400 hover:bg-cyan-300 text-black py-3 rounded-xl font-bold transition"
         >
           Save & View Dashboard
         </button>
