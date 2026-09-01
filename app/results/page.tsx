@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveQuizResult } from "@/lib/database";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -27,50 +26,37 @@ export default function ResultsPage() {
     const m = localStorage.getItem("mastery");
     if (m) setMastery(JSON.parse(m));
 
-    setName(localStorage.getItem("playerName") || "");
+    // Leave blank every quiz
+    setName("");
   }, []);
 
-  async function finishQuiz() {
+  function finishQuiz() {
     const player = name.trim() || "Anonymous";
 
-    try {
-      // Save to Supabase
-      await saveQuizResult({
-        name: player,
-        score,
-        total,
-        rating,
-        mastery,
-      });
+    // Save player info
+    localStorage.setItem("playerName", player);
+    localStorage.setItem("score", String(score));
+    localStorage.setItem("total", String(total));
+    localStorage.setItem("rating", String(rating));
+    localStorage.setItem("mastery", JSON.stringify(mastery));
 
-      // Save user info
-      localStorage.setItem("playerName", player);
-      localStorage.setItem("score", String(score));
-      localStorage.setItem("total", String(total));
-      localStorage.setItem("rating", String(rating));
-      localStorage.setItem("mastery", JSON.stringify(mastery));
+    // Save leaderboard
+    const leaderboard = JSON.parse(
+      localStorage.getItem("leaderboard") || "[]"
+    );
 
-      // ⭐ Save into leaderboard
-      const leaderboard = JSON.parse(
-        localStorage.getItem("leaderboard") || "[]"
-      );
+    leaderboard.push({
+      name: player,
+      score,
+      total,
+      rating,
+    });
 
-      leaderboard.push({
-        name: player,
-        score,
-        rating,
-      });
+    leaderboard.sort((a: any, b: any) => b.rating - a.rating);
 
-      leaderboard.sort((a: any, b: any) => b.rating - a.rating);
+    localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
 
-      localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
-
-      // Go to dashboard
-      router.push("/dashboard");
-    } catch (error) {
-      console.error("Failed to save result:", error);
-      alert("Failed to save result. Please try again.");
-    }
+    router.push("/dashboard");
   }
 
   const accuracy = Math.round((score / total) * 100);

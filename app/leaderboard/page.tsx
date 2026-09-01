@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type Player = {
   name: string;
   score: number;
+  total: number;
   rating: number;
 };
 
@@ -50,7 +51,9 @@ export default function Leaderboard() {
                 >
                   <td className="p-4 font-bold">#{i + 1}</td>
                   <td>{p.name}</td>
-                  <td>{p.score}</td>
+                  <td>
+                    {p.score}/{p.total}
+                  </td>
                   <td>{p.rating}</td>
                 </tr>
               ))
