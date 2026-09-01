@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Question = {
@@ -10,7 +10,7 @@ type Question = {
   explanation: string;
 };
 
-export default function QuizPage() {
+function QuizContent() {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -23,7 +23,6 @@ export default function QuizPage() {
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
 
-  // ---------------- LOAD AI QUIZ ----------------
   useEffect(() => {
     loadQuiz();
   }, []);
@@ -53,11 +52,10 @@ export default function QuizPage() {
       setLoading(false);
     } catch (err) {
       console.error(err);
-      alert("Failed to generate quiz. Check VS Code terminal.");
+      alert("Failed to generate quiz.");
     }
   }
 
-  // ---------------- NEXT QUESTION ----------------
   function nextQuestion() {
     let newScore = score;
 
@@ -89,7 +87,6 @@ export default function QuizPage() {
     setSelected(null);
   }
 
-  // ---------------- LOADING ----------------
   if (loading) {
     return (
       <main className="min-h-screen bg-[#071342] flex items-center justify-center text-white">
@@ -141,5 +138,19 @@ export default function QuizPage() {
         </button>
       </div>
     </main>
+  );
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#071342] flex items-center justify-center text-white">
+          <h1 className="text-4xl font-bold">Loading...</h1>
+        </main>
+      }
+    >
+      <QuizContent />
+    </Suspense>
   );
 }
